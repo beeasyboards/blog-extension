@@ -10,7 +10,7 @@ class PostsController extends Controller
     /**
      * @var integer Default related posts limit
      */
-    protected $limit = 5;
+    protected $limit = 4;
 
     /**
      * Fetch related blog posts
@@ -37,8 +37,8 @@ class PostsController extends Controller
         }
 
         // Load the thumbnail image
-        $related->load(['featured_images' => function($images) {
-            return $images->orderBy('sort_order', 'asc')->first();
+        $related->load(['featured_images' => function($image) {
+            $image->select('attachment_id', 'disk_name', 'file_name', 'title', 'description');
         }]);
 
         return $related;
@@ -53,7 +53,7 @@ class PostsController extends Controller
     {
         return Post::isPublished()
             ->where('slug', '<>', $slug)
-            ->select('id', 'title', 'subtitle')
+            ->select('id', 'slug', 'title', 'subtitle')
             ->orderBy('published_at', 'desc')
             ->take($limit);
     }
