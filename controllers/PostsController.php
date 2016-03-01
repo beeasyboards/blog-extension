@@ -20,7 +20,7 @@ class PostsController extends Controller
     public function related($slug)
     {
         // Fetch the related posts based on common categories
-        $related = $this->fetchPosts($slug)
+        $related = $this->fetchPosts($slug, $this->limit)
             ->whereHas('categories', function($category) use ($slug) {
                 return $category->whereHas('posts', function($post) use ($slug) {
                     $post->whereSlug($slug);
@@ -30,8 +30,8 @@ class PostsController extends Controller
 
         // If there aren't enough related posts, fill in the gaps with recent ones instead
         $relatedCount = $related->count();
-        if ($relatedCount < $limit) {
-            $related = $related->merge($this->fetchPosts($slug, $limit - $relatedCount)
+        if ($relatedCount < $this->limit) {
+            $related = $related->merge($this->fetchPosts($slug, $this->limit - $relatedCount)
                 ->whereNotIn('id', $related->lists('id'))
                 ->get());
         }
@@ -49,7 +49,7 @@ class PostsController extends Controller
      *
      * @return Illuminate\Databse\Query\Builder
      */
-    protected function fetchPosts($slug, $limit = 5)
+    protected function fetchPosts($slug, $limit)
     {
         return Post::isPublished()
             ->where('slug', '<>', $slug)
