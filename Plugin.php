@@ -87,6 +87,10 @@ class Plugin extends PluginBase
                 '<div style="text-align: $1">$2</div>',
                 $data->text
             );
+
+            // Flexible row and column helpers
+            $data->text = preg_replace('/\<(row|col|column)\>/i', '<div class="flex-$1">', $data->text);
+            $data->text = preg_replace('/\<\/(row|col|column)\>/i', '</div>', $data->text);
         });
     }
 }
