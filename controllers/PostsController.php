@@ -3,14 +3,15 @@
 use RainLab\Blog\Models\Post;
 use Illuminate\Routing\Controller;
 use Owl\RainLabBlogApi\Models\Settings;
+use BeEasy\BlogExtension\Classes\PostsQuery;
 
 class PostsController extends Controller
 {
 
-    /**
-     * @var integer Default related posts limit
-     */
-    protected $limit = 4;
+    public function recent($slug)
+    {
+        return PostsQuery::getRecent($slug, 3);
+    }
 
     /**
      * Fetch related blog posts
@@ -19,21 +20,21 @@ class PostsController extends Controller
      */
     public function related($slug)
     {
+        // Determine how many related posts to display
+        $settings = Settings::get('beeasy', []);
+        $limit = array_key_exists('related_limit', $settings)
+            ? intval($settings['related_limit'])
+            : 4;
+
         // Fetch the related posts based on common categories
-        $related = $this->fetchPosts($slug, $this->limit)
-            ->whereHas('categories', function($category) use ($slug) {
-                return $category->whereHas('posts', function($post) use ($slug) {
-                    $post->whereSlug($slug);
-                });
-            })
-            ->get();
+        $related = PostsQuery::getRelated($slug, $limit);
 
         // If there aren't enough related posts, fill in the gaps with recent ones instead
         $relatedCount = $related->count();
-        if ($relatedCount < $this->limit) {
-            $related = $related->merge($this->fetchPosts($slug, $this->limit - $relatedCount)
-                ->whereNotIn('id', $related->lists('id'))
-                ->get());
+        if ($relatedCount < $limit) {
+            $recentLimit = $limit - $relatedCount;
+            $recent = PostsQuery::getRecent($slug, $related, $recentLimit);
+            $related = $related->merge($recent);
         }
 
         // Load the thumbnail image
@@ -42,19 +43,5 @@ class PostsController extends Controller
         }]);
 
         return $related;
-    }
-
-    /**
-     * Start building a query to fetch related posts
-     *
-     * @return Illuminate\Databse\Query\Builder
-     */
-    protected function fetchPosts($slug, $limit)
-    {
-        return Post::isPublished()
-            ->where('slug', '<>', $slug)
-            ->select('id', 'slug', 'title', 'subtitle')
-            ->orderBy('published_at', 'desc')
-            ->take($limit);
     }
 }

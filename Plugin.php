@@ -35,8 +35,9 @@ class Plugin extends PluginBase
 
     public function boot()
     {
-        $this->extendPostsController();
+        $this->extendBlogPlugins();
         $this->extendMarkdown();
+        $this->extendPostsController();
     }
 
     /**
@@ -91,6 +92,32 @@ class Plugin extends PluginBase
             // Flexible row and column helpers
             $data->text = preg_replace('/\<(row|col|column)\>/i', '<div class="flex-$1">', $data->text);
             $data->text = preg_replace('/\<\/(row|col|column)\>/i', '</div>', $data->text);
+        });
+    }
+
+    /**
+     * Extend the blog API plugin to add some Be Easy specific fields
+     *
+     * @return void
+     */
+    protected function extendBlogPlugins()
+    {
+        Event::listen('backend.form.extendFields', function($widget) {
+            if (!$widget->getController() instanceof \System\Controllers\Settings ||
+                !$widget->model instanceof \Owl\RainLabBlogApi\Models\Settings) {
+                return;
+            }
+
+            $widget->addFields([
+                'beeasy[related_limit]' => [
+                    'tab' => 'Related posts',
+                    'label' => 'Related posts',
+                    'comment' => 'The number of related blog posts to display.',
+                    'type' => 'number',
+                    'span' => 'left',
+                    'default' => 4,
+                ],
+            ], 'primary');
         });
     }
 }
