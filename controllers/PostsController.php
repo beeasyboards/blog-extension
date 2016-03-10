@@ -8,9 +8,15 @@ use BeEasy\BlogExtension\Classes\PostsQuery;
 class PostsController extends Controller
 {
 
-    public function recent($slug)
+    /**
+     * Fetch most recent posts
+     *
+     * @return Illuminate\Database\Eloquent\Collection
+     */
+    public function recent()
     {
-        return PostsQuery::getRecent($slug, 3);
+        $recent = PostsQuery::getHomeRecent(3);
+        return PostsQuery::loadThumbnails($recent);
     }
 
     /**
@@ -33,15 +39,11 @@ class PostsController extends Controller
         $relatedCount = $related->count();
         if ($relatedCount < $limit) {
             $recentLimit = $limit - $relatedCount;
-            $recent = PostsQuery::getRecent($slug, $related, $recentLimit);
+            $recent = PostsQuery::getRelatedRecent($slug, $related, $recentLimit);
             $related = $related->merge($recent);
         }
 
-        // Load the thumbnail image
-        $related->load(['featured_images' => function($image) {
-            $image->select('attachment_id', 'disk_name', 'file_name', 'title', 'description');
-        }]);
-
-        return $related;
+        // Load the thumbnails and return the posts
+        return PostsQuery::loadThumbnails($related);
     }
 }
