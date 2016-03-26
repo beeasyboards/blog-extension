@@ -15,7 +15,7 @@ class PostsController extends Controller
      */
     public function recent()
     {
-        $recent = PostsQuery::getHomeRecent(3);
+        $recent = PostsQuery::getHomeRecent(4);
         return PostsQuery::loadThumbnails($recent);
     }
 

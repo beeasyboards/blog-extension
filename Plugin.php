@@ -71,7 +71,7 @@ class Plugin extends PluginBase
             // YouTube
             $data->text = preg_replace(
                 '/\<(?:youtube)\s*=\s*\"?(\w+)\"?\s*\/?\>/im',
-                '<div class="video-wrapper"><iframe type="text/html" src="http://www.youtube.com/embed/$1" frameborder="0"/></iframe></div>',
+                '<div class="video-wrapper"><iframe type="text/html" src="//youtube.com/embed/$1" frameborder="0"/></iframe></div>',
                 $data->text
             );
 
